@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Widget Dashboard</title>
+<style>body{font-family:system-ui,sans-serif;margin:24px;color:#111;background:#f8fafc}input{padding:8px;width:380px}button{padding:8px 14px}
+table{border-collapse:collapse;background:#fff;margin:12px 0}td,th{border:1px solid #e2e8f0;padding:6px 10px;font-size:13px;text-align:left}
+.cards{display:flex;gap:12px;flex-wrap:wrap}.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px}.v{font-size:26px;font-weight:700}</style></head>
+<body><h2>Widget dashboard</h2>
+<p><input id="tok" placeholder="Bearer token (wpt_...)"> <button onclick="load()">Load</button></p>
+<div class="cards" id="cards"></div><h3>Per widget</h3><table id="pw"></table><h3>By country</h3><table id="geo"></table>
+<h3>Latest submissions</h3><table id="subs"></table>
+<script>
+function t(id,rows,head){var h='<tr>'+head.map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr>';
+ document.getElementById(id).innerHTML=h+rows.map(function(r){return '<tr>'+r.map(function(c){var d=document.createElement('div');d.textContent=c==null?'':c;return '<td>'+d.innerHTML+'</td>'}).join('')+'</tr>'}).join('');}
+function load(){var H={Authorization:'Bearer '+document.getElementById('tok').value.trim()};
+ fetch('/api/stats',{headers:H}).then(function(r){return r.json()}).then(function(s){
+  document.getElementById('cards').innerHTML=['total_submissions','enriched_pct'].map(function(k){return '<div class="card"><div>'+k.replace('_',' ')+'</div><div class="v">'+s[k]+(k=='enriched_pct'?'%':'')+'</div></div>'}).join('');
+  t('pw',s.per_widget.map(function(w){return [w.widget_id,w.title,w.submissions,w.spam_blocked]}),['Widget','Title','Submissions','Spam blocked']);
+  t('geo',s.by_country.map(function(g){return [g.country,g.count]}),['Country','Count']);});
+ fetch('/api/submissions?limit=20',{headers:H}).then(function(r){return r.json()}).then(function(rows){
+  t('subs',rows.map(function(s){return [s.id,s.created_at.slice(0,19),s.widget_id,JSON.stringify(s.data),s.geo.country||'-',s.geo.provider||'-',s.origin||'-']}),['#','At','Widget','Data','Country','Geo provider','Origin']);});}
+</script></body></html>

@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: widgets, POSTGRES_PASSWORD: widgets, POSTGRES_DB: widgets}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U widgets -d widgets"], interval: 3s, retries: 20}
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://widgets:widgets@db:5432/widgets
+      SMTP_HOST: mailpit
+    ports: ["8000:8000"]
+    depends_on: {db: {condition: service_healthy}}
+  site:            # the "customer website": a second origin (port 5500) serving demo-site/index.html
+    image: python:3.12-alpine
+    working_dir: /site
+    command: python -m http.server 5500
+    volumes: ["./demo-site:/site:ro"]
+    ports: ["5500:5500"]
+  mailpit:         # free local mail catcher: UI on http://localhost:8025 (used when EMAIL_MODE=smtp)
+    image: axllent/mailpit
+    ports: ["8025:8025", "1025:1025"]
+volumes:
+  pgdata:

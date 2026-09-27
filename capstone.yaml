@@ -1,0 +1,25 @@
+name: flyrank-capstone-widget-platform
+capstone: Embeddable Widget & Lead-Capture Platform
+run: docker compose up --build -d
+seed: docker compose exec api python -m scripts.seed
+test: docker compose exec api python -m pytest -q
+base_url: http://localhost:8000
+second_origin_page: http://localhost:5500/
+auth: {header: "Authorization: Bearer", demo_tokens: [wpt_demo_bakery_owner_token, wpt_demo_other_company_token]}
+endpoints:
+  - {method: POST,   path: /api/tenants}
+  - {method: POST,   path: /api/widgets, auth: true}
+  - {method: GET,    path: /api/widgets, auth: true}
+  - {method: GET,    path: "/api/widgets/{id}", auth: true}
+  - {method: PATCH,  path: "/api/widgets/{id}", auth: true}
+  - {method: DELETE, path: "/api/widgets/{id}", auth: true}
+  - {method: GET,    path: "/api/widgets/{id}/embed", auth: true}
+  - {method: GET,    path: "/widget.js?id={id}"}
+  - {method: GET,    path: "/assets/widget-{hash}.js"}
+  - {method: GET,    path: "/widgets/{id}/config"}
+  - {method: OPTIONS, path: /submissions}
+  - {method: POST,   path: /submissions, probe: [1, 2, 3, 6]}
+  - {method: GET,    path: /api/submissions, auth: true, probe: 1}
+  - {method: GET,    path: /api/stats, auth: true}
+  - {method: POST,   path: /dev/geo-providers, probe: 4}
+  - {method: POST,   path: "/dev/side-effects?fail=true", probe: 5}
